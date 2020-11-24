@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'stm_com_tool'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=stm_com_tool",
+                    "--package=stm_com_tool"
+                ],
+                "filter": {
+                    "name": "stm_com_tool",
+                    "kind": "bin"
+                }
+            },
+            "args": ["-- -t COM124"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'stm_com_tool'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=stm_com_tool",
+                    "--package=stm_com_tool"
+                ],
+                "filter": {
+                    "name": "stm_com_tool",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

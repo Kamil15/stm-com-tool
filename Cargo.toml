@@ -1,0 +1,12 @@
+[package]
+name = "stm_com_tool"
+version = "0.1.0"
+authors = ["Kamil <kamildudek2@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+structopt = "0.3.20"
+serialport = "3.3.0"
+bytes = "0.6.0"
