@@ -1,10 +1,13 @@
+//! A simple controller that keeps the SerialPort in a separate thread.
+
 use serialport::SerialPort;
-use std::cell::RefCell;
 use std::io::{self, Write};
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
+use super::args::ArgCommands;
+
+/// Thread Handler and communication interface with the SerialPort thread.
 pub struct SerialController {
     handler: JoinHandle<()>,
     pub tx: Sender<ControllerMsg>,
@@ -12,7 +15,8 @@ pub struct SerialController {
 }
 
 impl SerialController {
-    pub fn start_thread(serial: Box<dyn SerialPort>) -> SerialController {
+    /// Create a new thread with the running SerialPort
+    pub fn start_thread(serial: Box<dyn SerialPort>, args: ArgCommands) -> SerialController {
         let (tx, thread_rx) = mpsc::channel();
         let (thread_tx, rx) = mpsc::channel();
 
@@ -20,7 +24,8 @@ impl SerialController {
             let thread_self = SerialControllerThread {
                 tx: thread_tx,
                 rx: thread_rx,
-                serial: serial,
+                serial,
+                args,
             };
             thread_self.main_loop();
         });
@@ -33,34 +38,35 @@ impl SerialController {
     }
 }
 
-pub struct SerialControllerThread {
+struct SerialControllerThread {
     tx: Sender<ControllerMsg>,
     rx: Receiver<ControllerMsg>,
     serial: Box<dyn SerialPort>,
+    args: ArgCommands,
 }
 
 impl SerialControllerThread {
     fn main_loop(mut self) {
+        let term = console::Term::stdout();
         let mut r_bufer: [u8; 1024] = [0; 1024];
         loop {
             if let Ok(i) = self.serial.bytes_to_read() {
                 if i > 0 {
                     let i = i as usize;
                     let x = &mut r_bufer[0..i];
-                    let n = self.serial.read(&mut r_bufer[0..i]).unwrap_or(0);
-                    if n > 1 {
-                        let text = String::from_utf8_lossy(&r_bufer[..n]);
-                        print!("{}", text);
-                        std::io::stdout().flush().unwrap();
-                    }
+                    let i = self.serial.read(&mut r_bufer[0..i]).unwrap_or(0);
+                    let text = String::from_utf8_lossy(&r_bufer[..i]);
+                    print!("{}", text);
+                    std::io::stdout().flush().unwrap();
                 }
             }
 
             if let Ok(x) = self.rx.try_recv() {
                 if let ControllerMsg::Send(val) = x {
-                    //let mut q = val.as_bytes();
                     let mut val = &(*val);
-                    println!("{:?}", val);
+                    if self.args.debug == true {
+                        println!("{:?}", val);
+                    }
                     self.serial.write_all(val).unwrap();
                 }
             }

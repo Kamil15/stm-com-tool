@@ -1,30 +1,19 @@
-use serialport::*;
-use std::sync;
+use serialport::{SerialPortSettings, DataBits, FlowControl, Parity, StopBits};
+use std::{str::FromStr, sync};
 use std::thread;
 use std::time::Duration;
 use structopt::StructOpt;
+use std::sync::Arc;
 
-mod serial_controller;
-use serial_controller::{ControllerMsg, SerialController};
 
-#[cfg(target_os = "linux")]
-const DEFAULT_COM: &str = "NON";
-
-#[cfg(target_os = "windows")]
-const DEFAULT_COM: &str = "COM1";
-#[derive(Debug, StructOpt)]
-#[structopt(name = "COM_tool", about = "About.")]
-struct ArgCommands {
-    #[structopt(short, long, default_value = DEFAULT_COM)]
-    target: String,
-
-    #[structopt(short, long)]
-    baud_rate: Option<u32>,
-}
+pub mod lib;
+use lib::serial_controller::{ControllerMsg, SerialController};
+use lib::modes::*;
+use lib::args::*;
 
 fn main() {
-    let x = ArgCommands::from_args();
-    println!("{}", x.target);
+    let args = ArgCommands::from_args();
+    println!("{:?}", args);
     let s = SerialPortSettings {
         baud_rate: 115200,
         data_bits: DataBits::Eight,
@@ -33,14 +22,13 @@ fn main() {
         stop_bits: StopBits::One,
         timeout: Duration::from_millis(1),
     };
-    let mut serial = serialport::open_with_settings(&x.target, &s).expect("Can't open port.");
-    let handler = SerialController::start_thread(serial);
+    let mut serial = serialport::open_with_settings(&args.target, &s).expect("Can't open port.");
+    let handler = SerialController::start_thread(serial, args.clone());
 
-    loop {
-        let mut rbuffer = String::new();
-        let i = std::io::stdin().read_line(&mut rbuffer).expect("read_line");
+   match args.mode {
+        ArgMode::Interactive => Interactive::new(handler, args).enter(),
+        ArgMode::Loopshot{..} => LoopShot::new(handler, args).enter()
+    };
 
-        let rbuffer = Box::from(rbuffer[..i - 2].as_bytes());
-        handler.tx.send(ControllerMsg::Send(rbuffer)).unwrap();
-    }
+    
 }
