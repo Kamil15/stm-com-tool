@@ -1,4 +1,4 @@
 pub mod args;
-pub mod serial_controller;
+pub mod codec;
 pub mod modes;
-
+pub mod serial_controller;

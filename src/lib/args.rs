@@ -18,7 +18,7 @@ pub struct ArgCommands {
     pub mode: ArgMode,
 
     #[structopt(short, long)]
-    pub debug: bool,
+    pub verbose: bool,
 
     #[structopt(short, long)]
     pub clear_screen: bool,
@@ -33,5 +33,9 @@ pub enum ArgMode {
 
         #[structopt(short, long)]
         command: String,
-    }
+    },
+    Oneshot {
+        #[structopt(short, long)]
+        command: String,
+    },
 }

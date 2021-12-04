@@ -19,7 +19,12 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-- -t COM124"],
+            "args": [
+                "-t COM14",
+                "-c loopshot",
+                "-i 1000",
+                "-c REV;"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {
